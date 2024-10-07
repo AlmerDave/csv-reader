@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet author="t-actolentino"
+               id="changelog-moses-omnia-1.0_001" failOnError="true">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="MOSE_DESK" />
+            </not>
+        </preConditions>
+        <createTable tableName="MOSE_DESK">
+            <column name="DESK_CODE" type="VARCHAR2(255)">
+                <constraints nullable="false" primaryKey="true"
+                             primaryKeyName="pk_desk" />
+            </column>
+            <column name="DESK_DESC" type="VARCHAR2(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="DEPARTMENT" type="VARCHAR2(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="STATUS" type="VARCHAR2(255)"
+                    defaultValue="PENDING APPROVAL">
+                <constraints nullable="false" />
+            </column>
+            <column name="CREATED_BY" type="VARCHAR2(255)"
+                    defaultValue="OMNIA">
+                <constraints nullable="false" />
+            </column>
+            <column name="DATE_CREATED" type="DATETIME"
+                    defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+            <column name="DATE_MODIFIED" type="DATETIME"
+                    defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+            <column name="VERSION" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="t-actolentino"
+               id="changelog-moses-omnia-1.0_002" failOnError="true">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="MOSE_BRANCH" />
+            </not>
+        </preConditions>
+        <createTable tableName="MOSE_BRANCH">
+            <column name="BRANCH_CODE" type="VARCHAR2(255)">
+                <constraints nullable="false" primaryKey="true"
+                             primaryKeyName="pk_branch" />
+            </column>
+            <column name="BRANCH_NAME" type="VARCHAR2(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="DESK_CODE" type="VARCHAR2(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="CREATED_BY" type="VARCHAR2(255)"
+                    defaultValue="OMNIA">
+                <constraints nullable="false" />
+            </column>
+            <column name="DATE_CREATED" type="DATETIME"
+                    defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+            <column name="DATE_MODIFIED" type="DATETIME"
+                    defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+            <column name="VERSION" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="t-actolentino"
+               id="changelog-moses-omnia-1.0_003">
+        <addForeignKeyConstraint
+                baseColumnNames="DESK_CODE" baseTableName="MOSE_BRANCH"
+                constraintName="fk_desk_code_branch" onDelete="NO ACTION"
+                onUpdate="NO ACTION" referencedColumnNames="DESK_CODE"
+                referencedTableName="MOSE_DESK" />
+    </changeSet>
+
+</databaseChangeLog>
