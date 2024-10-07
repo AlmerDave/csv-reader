@@ -6,4 +6,5 @@ import com.example.csv.dto.CsvDto;
 
 public interface CsvHandler {
 	void processCsvData(List<CsvDto> csv, String filename) throws Exception;
+	void validateHeaders(CsvDto actualHeaders, String fileName) throws Exception;
 }

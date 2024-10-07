@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.annotations.BatchSize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,7 +24,6 @@ public class CsvService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(CsvService.class);
 	
 	private final int BATCH_SIZE = 1000;
-	private final int HEADER_ROW = 0;
 	
 	
 	public List<String[]> readAllLines(Path filePath) throws Exception {
@@ -74,11 +72,11 @@ public class CsvService {
 	    
 	}
 	
-	public void csvReaderWithLargeFiles(Path filePath, String filename, DeskListHandlerService handlerService) throws Exception {
+	public void csvReaderWithLargeFiles(Path filePath, String filename, CsvHandler handlerService) throws Exception {
 		LOGGER.info("Reading files line by line from {}", filePath);
 		
 		try (BufferedReader reader = Files.newBufferedReader(filePath)) {
-			validateCsvFileStructureForBatch(reader, filename, handlerService);
+			validateCsvFileStructure(reader, filename, handlerService);
 		}
 		
  
@@ -107,18 +105,15 @@ public class CsvService {
 		    	rowCount++;
 		    	
 		    	if(batchData.size() == BATCH_SIZE) {
-		    		handlerService.processCsvDataByBatch(batchData, filename);
+		    		handlerService.processCsvData(batchData, filename);
 		    		batchData.clear();
 		    	}
-		    	
 		    }
 		    
 		    if(!batchData.isEmpty()) {
-		    	handlerService.processCsvDataByBatch(batchData, filename);
+		    	handlerService.processCsvData(batchData, filename);
 		    }
 		    
-		    
-		    LOGGER.info("Successfully processed a total of {} rows.", rowCount);
 		} catch (Exception e) {
 			LOGGER.error("Error reading large CSV file: {}", e.getMessage(), e);
 			throw new Exception(e.getMessage());
@@ -134,9 +129,9 @@ public class CsvService {
 		return rowCount == CsvConstants.COLUMN_HEADER_INDEX;
 	}
 
-	private void validateCsvFileStructureForBatch(BufferedReader reader, String filename, DeskListHandlerService handlerService) 
+	private void validateCsvFileStructure(BufferedReader reader, String filename, CsvHandler handlerService) 
 			throws Exception {
-		LOGGER.info("Start validateEofAndRowCountForBatch() : {}", filename);
+		LOGGER.info("Start validateCsvFileStructure() : {}", filename);
 			
 		Iterator<CsvDto> rowDetails = new CsvToBeanBuilder<CsvDto>(reader)
 		    	.withType(CsvDto.class)
@@ -170,10 +165,25 @@ public class CsvService {
 
 	    // Validate EOF row
 	    if (lastRow != null) {
-	    	handlerService.validateEofAndRowCount(lastRow, rowCount, filename);
+	    	validateEofAndRowCount(lastRow, rowCount, filename);
 	    }
 	    
 	    reader.close();
-
 	}
+	
+    private void validateEofAndRowCount(CsvDto lastRow, int rowCount, String filename) throws Exception {
+
+        if (!"EOF".equalsIgnoreCase(lastRow.getFirstColumn())) {
+        	LOGGER.error("EOF validation failed for file: {}", filename);
+            throw new Exception("Last line is not EOF in file: " + filename);
+        }
+
+        int eofValue = Integer.parseInt(lastRow.getSecondColumn());
+        int expectedRowCount = rowCount - CsvConstants.COLUMN_HEADER_EOF_COUNT;
+        
+        if (eofValue != expectedRowCount) {
+        	LOGGER.error("Row count validation failed for file: {}", filename);
+            throw new Exception("EOF value does not match the number of detail rows in file: " + filename);
+        }
+    }
 }

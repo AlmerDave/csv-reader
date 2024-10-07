@@ -2,7 +2,6 @@ package com.example.csv.service;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,9 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
-import com.example.csv.dto.CsvDto;
-import com.example.csv.service.impl.CsvHandler;
 
 @Service
 public class UnifiedCsvProcessorService {
@@ -44,45 +40,22 @@ public class UnifiedCsvProcessorService {
      */
 	@Scheduled(fixedDelay= Long.MAX_VALUE)
 //	@Scheduled(cron = "${test.run.schedule}")
-	public void processAllCsvFiles() {
+	public void processDeskCsvFiles() {
 		
 		try {
+			// Get files from initial
 			List<String> unprocessedCsvFiles = fileService.getUnprocessedCsvFiles();
 			
 			for(String filename : unprocessedCsvFiles) {
 				if(filename.contains(deskListPrefix)) {
-					// process CSV file
 					processLargeSingleCsvFile(filename);
-					
-				} else if (filename.contains(branchListPrefix)) {
-					// process CSV file
-					processSingleCsvFile(filename, branchListHandlerService);
 				}
 			}
-			
 			
 		} catch (Exception e) {
 			LOGGER.error("Error processing CSV files: {}", e.getMessage(), e);
 		}
-		
-		
-		
 	}
-	
-	
-	private void processSingleCsvFile(String filename, CsvHandler csvHandler) throws Exception {
-        LOGGER.info("Processing file: {}", filename);
-
-        fileService.moveCsvToInProgressDirectory(filename);
-        Path csvFilePath = fileService.getFilePathWithFileName(csvInProgressDirectory, filename);
-
-        List<CsvDto> csvData = csvService.csvReader(csvFilePath);
-        
-        csvHandler.processCsvData(csvData, filename);
-
-        fileService.moveCsvToCompleteDirectory(filename);
-        LOGGER.info("Successfully processed file: {}", filename);
-    }
 	
 	private void processLargeSingleCsvFile(String filename) throws Exception {
 	    LOGGER.info("Processing Large Single file: {}", filename);

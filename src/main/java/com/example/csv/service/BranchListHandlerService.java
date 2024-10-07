@@ -34,78 +34,25 @@ public class BranchListHandlerService implements CsvHandler {
 	@Override
 	public void processCsvData(List<CsvDto> csvData, String filename) throws Exception {
 		try {
-			validateCsvStructure(csvData, filename);
-			
-			List<CsvDto> csvDataWithoutHeadersAndEof = removeHeadersAndEof(csvData);
-	        List<Branch> data = convertCsvDtoToEntities(csvDataWithoutHeadersAndEof);
-	        
-	        saveBranchList(data);
-	        
+			List<Branch> dataList = convertCsvDtoToEntities(csvData);
+	        // Enter additional validation here per row
+
 		} catch (Exception e) {
 			throw new Exception(e.getMessage());
 		}
 		
 	}
-	
-	
-	 private void saveBranchList(List<Branch> data) {
-		 branchRepository.saveAll(data);
-		}
 
-		private void validateCsvStructure(List<CsvDto> csvData, String fileName) throws Exception {
-	        validateHeaders(csvData.get(CsvConstants.COLUMN_HEADER_INDEX), fileName);
-	        validateEofAndRowCount(csvData, fileName);
-	    }
-	    
-	    private void validateHeaders(CsvDto actualHeaders, String fileName) throws Exception {
-	        List<String> actualHeaderList = new ArrayList<>();
-	        
-	        // Dynamically add non-null headers
-	        String[] headerFields = {
-	            actualHeaders.getFirstColumn(),
-	            actualHeaders.getSecondColumn(),
-	            actualHeaders.getThirdColumn(),
-	            actualHeaders.getFourthColumn()
-	        };
-	        
-	        for (String header : headerFields) {
-	            if (header != null && !header.trim().isEmpty()) {
-	                actualHeaderList.add(header.trim());
-	            }
-	        }
+	private List<Branch> convertCsvDtoToEntities(List<CsvDto> csvData) {
+        return csvData.stream()
+        		.map(BranchMapper::toEntity)
+	            .collect(Collectors.toList());
+	}
 
-	        if (!actualHeaderList.equals(expectedHeaders)) {
-	        	LOGGER.error("Header validation failed for file: {}", fileName);
-	        	throw new Exception("CSV header mismatch. Expected: " + expectedHeaders + ", but found: " + actualHeaderList);
-	        }
-	    }
-	    
-	    private void validateEofAndRowCount(List<CsvDto> csvData, String fileName) throws Exception {
-	        int lastIndex = csvData.size() - 1;
-	        CsvDto lastRow = csvData.get(lastIndex);
-
-	        if (!"EOF".equalsIgnoreCase(lastRow.getFirstColumn())) {
-	        	LOGGER.error("EOF validation failed for file: {}", fileName);
-	            throw new Exception("Last line is not EOF in file: " + fileName);
-	        }
-
-	        int eofValue = Integer.parseInt(lastRow.getSecondColumn());
-	        int expectedRowCount = lastIndex - 1;
-	        
-	        if (eofValue != expectedRowCount) {
-	        	LOGGER.error("Row count validation failed for file: {}", fileName);
-	            throw new Exception("EOF value does not match the number of detail rows in file: " + fileName);
-	        }
-	    }
-
-	    private List<CsvDto> removeHeadersAndEof(List<CsvDto> csvData) {
-	        return csvData.subList(1, csvData.size() - 1);
-	    }
-
-	    private List<Branch> convertCsvDtoToEntities(List<CsvDto> csvData) {
-	        return csvData.stream()
-	                .map(BranchMapper::toEntity)
-	                .collect(Collectors.toList());
-	    }
+	@Override
+	public void validateHeaders(CsvDto actualHeaders, String fileName) throws Exception {
+		
+		
+	}
 
 }
